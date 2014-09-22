@@ -1,111 +1,100 @@
 package com.example.ffff;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.android.volley.VolleyError;
-import com.minephone.volley.FileDownloadThread;
-import com.minephone.volley.FileUpload;
-import com.minephone.volley.ImagePiece;
-import com.minephone.volley.ImageSplitter;
-import com.minephone.volley.MQuery;
-import com.minephone.volley.NetAccess;
-import com.minephone.volley.ObjectCache;
-import com.minephone.volley.NetAccess.NetAccessListener;
-
-import android.os.Bundle;
-import android.os.Debug;
-import android.R.anim;
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.TransitionDrawable;
-import android.util.Log;
-import android.view.Menu;
+import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ImageView;
+import android.view.View.OnLongClickListener;
+import android.widget.Toast;
 
-public class MainActivity extends Activity implements NetAccessListener {
-	MMLoadingView loadview;
+import com.alibaba.fastjson.JSONObject;
+import com.android.volley.VolleyError;
+import com.minephone.volley.MQuery;
+import com.minephone.volley.NetAccess.NetAccessListener;
+
+public class MainActivity extends Activity implements NetAccessListener, OnClickListener {
 	MQuery mq;
-	NetAccess net;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		loadview = (MMLoadingView) findViewById(R.id.mMLoadingView1);
 		mq = new MQuery(this);
-		mq.request().dealFailRequest(this);
+		mq.request().dealFailRequest(this);//byUntilSuccessGet
 		
-		
-		
-		
-		mq.request().byPost("baidu.com", this);
-		mq.request().byCachePost("baidu.com", this);
-		//直到成功的请求
-		mq.request().byUntilSuccessPost("baidu.com", this);
-		//处理上面未成功的请求(全部失败的)
-		mq.request().dealFailRequest(this);
-		
-		AnimationDrawable ad = new AnimationDrawable();
-		ad.addFrame(getResources().getDrawable(R.drawable.ic_launcher), 1500);// 显示的时间
-		ad.addFrame(getResources().getDrawable(R.drawable.bg_error_image), 1500);// 显示的时间
-		ad.setOneShot(false);// 循环播放
-		loadview.setBackgroundDrawable(ad);// 设置动画
-		ad.start();// 开始播放
-		// loadview.setAnimation(null);
-		// loadview.startAnimation(/)
-		
-		
-		
-		findViewById(R.id.button1).setOnClickListener(new OnClickListener() {
+		mq.id(R.id.button1).clicked(this);
+		mq.id(R.id.button2).clicked(this);
+		mq.id(R.id.button3).clicked(this);
+		mq.id(R.id.button4).clicked(this);
+		mq.id(R.id.button5).clicked(this);
+		mq.id(R.id.button6).clicked(this);
+		mq.id(R.id.button7).clicked(this);
+		mq.id(R.id.button8).clicked(this);
+		mq.id(R.id.button9).clicked(this);
+		mq.id(R.id.button10).longclicked(new OnLongClickListener() {
 			@Override
-			public void onClick(View arg0) {
-				net = mq.request();
-				net.byUntilSuccessGet("http://192.168.191.1:8080/apperror/setcookie",
-						MainActivity.this);
+			public boolean onLongClick(View view) {
+				Toast.makeText(getApplicationContext(), "长按！", 1000).show();
+				return false;
 			}
 		});
-
-		findViewById(R.id.button2).setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				net = mq.request();
-				net.byGet("http://192.168.191.1:8080/apperror/delcookie",
-						MainActivity.this);
-			}
-		});
-
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
-	@Override
-	protected void onDestroy() {
-		loadview.stop();
-		super.onDestroy();
 	}
 
 	@Override
 	public void onAccessComplete(boolean success, String object,
 			VolleyError error, String flag) {
-		if (net != null) {
-			Log.i("test", "rewcookies:" + net.getRecookies());
-			Log.i("test", "rewheaders:" + net.getReHeaders());
-		} else {
-			Log.i("test", "net var is null");
+		Toast.makeText(getApplicationContext(), "请求回调:success=" + success + " object=" + object, 1000).show();
+	}
+
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) {
+		case R.id.button1:
+//			Toast.makeText(getApplicationContext(), "path:" + NetAccess.CachePath, 1000).show();
+			mq.id(R.id.textView1).text("新内容!");
+			break;
+		case R.id.button2:
+			mq.id(R.id.imageView1).image("http://www.eoeandroid.com/uc_server/avatar.php?uid=1178907&size=middle");
+			break;
+		case R.id.button3:
+			mq.id(R.id.checkBox1).checked(true);
+			break;
+		case R.id.button4:
+			mq.id(R.id.textView1).visibility(View.GONE);
+			break;
+		case R.id.button5:
+			//不能取消(showDialog(false))
+			mq.request().showDialog(false).byGet("http://gc.ditu.aliyun.com/geocoding?a=%E8%8B%8F%E5%B7%9E%E5%B8%82", this);
+			break;
+		case R.id.button6:
+			//两次回调
+//			HashMap<String, String> params = new HashMap<String, String>();
+//			params.put("a", "%E8%8B%8F%E5%B7%9E%E5%B8%82");
+//			mq.request().byCachePost("http://gc.ditu.aliyun.com/geocoding", this);
+			mq.request().byCacheGet("http://gc.ditu.aliyun.com/geocoding?a=%E8%8B%8F%E5%B7%9E%E5%B8%82", this);
+			break;
+		case R.id.button7:
+			//若请求失败，存入数据库，使用mq.request().dealFailRequest(this);方法再次发起请求(微信有这个功能)
+			mq.request().byUntilSuccessGet("http://gc.ditu.aliyun.com/geocoding?a=%E8%8B%8F%E5%B7%9E%E5%B8%82", this);
+			break;
+		case R.id.button8:
+			Test t = new Test();
+			t.setId( (int)(Math.random()*1000));
+			t.setContent(Math.random()+"#");
+			if (mq.db().insert(t)){
+				Toast.makeText(getApplicationContext(), "success", 1000).show();
+			}
+			break;
+		case R.id.button9:
+			ArrayList<Test> list = (ArrayList<Test>) mq.db().findAll(Test.class);
+			Toast.makeText(getApplicationContext(), "数据:" + JSONObject.toJSONString(list), 1000).show();
+			break;
+		default:
+			break;
 		}
 	}
-	
 }
+
+
