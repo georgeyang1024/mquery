@@ -7,9 +7,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.net.http.SslCertificate.DName;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -293,6 +293,13 @@ public class MQuery {
 	public MQuery longclick(){
 		if(view != null){
 			view.performLongClick();
+		}
+		return this;
+	}
+	
+	public MQuery longclicked(OnLongClickListener listener) {
+		if (view != null) {
+			view.setOnLongClickListener(listener);
 		}
 		return this;
 	}

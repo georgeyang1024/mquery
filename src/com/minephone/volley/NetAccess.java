@@ -19,6 +19,7 @@ import android.graphics.BitmapFactory;
 import android.net.http.AndroidHttpClient;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.android.volley.Cache.Entry;
@@ -53,7 +54,7 @@ public class NetAccess {
 	private static final int IMAGEMAXMEASURE = 750;// 图片最大尺寸,0则不限制
 
 	private static final String CachePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/mquery";// volley缓存目录
-
+	
 	private static RequestQueue mRequestQueue;// 主要的请求类
 
 	private static ImageLoader mImageLoader;// 图片加载器
