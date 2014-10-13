@@ -649,7 +649,12 @@ public class NetAccess {
 		if (imageview == null) {
 			return;
 		}
-
+		
+		if (url==null) {
+			imageview.setImageResource(errorimg);
+			return;
+		}
+		
 		checkVar(null);
 
 		imageview.setTag(url);
