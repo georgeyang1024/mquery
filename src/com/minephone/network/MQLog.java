@@ -2,7 +2,7 @@ package com.minephone.network;
 
 import android.util.Log;
 
-public class MQLog {
+class MQLog {
 	public static boolean isDebug = true;
 	
 	public static void i(String tag, String msg) {

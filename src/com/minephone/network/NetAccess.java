@@ -559,7 +559,13 @@ public class NetAccess {
 				}
 			};
 		} else if (byCache) {
-			String cache = getCache(totalurl);
+			String cache = null;
+			if (method == Method.GET) {
+				cache = getCache(totalurl);
+			} else if (method == Method.POST) {
+				cache = getCache(url);
+			}
+			
 			if (cache != null) {
 				if (method == Method.GET) {
 					MQLog.i(TAG, "gcache-->" + cache);

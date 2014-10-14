@@ -2,6 +2,7 @@ package com.minephone.network;
 
 import java.io.File;
 
+import android.R.drawable;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -234,6 +235,13 @@ public class MQuery {
 			}else{
 				view.setBackgroundDrawable(null);
 			}
+		}
+		return this;
+	}
+	
+	public MQuery background(Drawable draw){
+		if(view != null){
+			view.setBackgroundDrawable(draw);
 		}
 		return this;
 	}
