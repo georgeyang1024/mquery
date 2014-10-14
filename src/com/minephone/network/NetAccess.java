@@ -19,6 +19,7 @@ import android.graphics.BitmapFactory;
 import android.net.http.AndroidHttpClient;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.android.volley.Cache.Entry;
@@ -121,6 +122,12 @@ public class NetAccess {
 		return data;
 	}
 
+	/**
+	 * 获取服务器给客户端的cookie
+	 * @author ping
+	 * @create 2014-10-14 下午3:31:30
+	 * @return
+	 */
 	public String getRecookies() {
 		if (request != null) {
 			return request.getRe_cookies();
@@ -586,6 +593,10 @@ public class NetAccess {
 			request.setParams(params);
 		}
 		request.setHeaders(heads);
+		if (cookies==null) {
+			cookies = CookieUtil.getCookie(mcontext, GetDomainName(url));
+		}
+		Log.i("test", "post cookice:" + cookies);
 		request.setCookies(cookies);
 		request.setTimeout(timeout);
 		request.setShouldCache(byCache);
