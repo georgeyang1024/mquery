@@ -28,6 +28,18 @@
             android:text="CheckBox" />
 
         <Button
+            android:id="@+id/button00"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="播放" />
+        
+                <Button
+            android:id="@+id/button01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="listview" />
+        
+        <Button
             android:id="@+id/button1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
