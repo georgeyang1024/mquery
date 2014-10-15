@@ -2,12 +2,12 @@ package com.minephone.network;
 
 import java.io.File;
 
-import android.R.drawable;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
@@ -35,21 +35,61 @@ import android.widget.TextView;
  */
 public class MQuery {
 	private View view;
+	private boolean useCache;//使用缓存适用于多次使用id(R.id.xx)、id(view)方法的地方(例如adaper)，不使用缓存适用于使用id(R.id.xx)、id(view)一次或不多的的情况
+	private static SparseArray<MQuery> mqCache;//mq变量缓存
 	
 	public MQuery (Activity activity) {
-		view = activity.getWindow().getDecorView();
+		this.view = activity.getWindow().getDecorView();
 	}
 	
 	public MQuery (View view) {
 		this.view = view;
 	}
 	
+	public MQuery (Activity activity,boolean usecache) {
+		this.useCache = usecache;
+		this.view = activity.getWindow().getDecorView();
+	}
+	
+	public MQuery (View view,boolean usecache) {
+		this.useCache = usecache;
+		this.view = view;
+	}
+	
 	public MQuery id (int id) {
-		return id(view.findViewById(id));
+		if (useCache) {
+			//10W次调用测试耗时:2316ms 2323ms 2348ms
+			if (mqCache == null) {
+				mqCache = new SparseArray<MQuery>();
+			}
+			MQuery mq = mqCache.get(view.hashCode() + id);
+			if (mq==null) {
+				mq = new MQuery(view.findViewById(id));
+				mqCache.put(view.hashCode() +id, mq);
+			}
+			return mq;
+		} else {
+			//10W次调用测试用时:5154ms 4808ms 5270ms
+			return id(view.findViewById(id));
+		}
 	}
 	
 	public MQuery id (View view) {
-		return new MQuery(view);
+		if (useCache) {
+			//10W次调用测试用时:2882ms 3142秒 3024秒
+			if (mqCache == null) {
+				mqCache = new SparseArray<MQuery>();
+			}
+			MQuery mq = mqCache.get(view.hashCode());
+			if (mq==null) {
+				mq = new MQuery(view);
+				mqCache.put(view.hashCode(), mq);
+			}
+			return mq;
+		} else {
+			//10W次调用测试用时:6467ms 6091ms 6001ms7
+			return new MQuery(view);			
+		}
 	}
 	
 	public NetAccess request() {
