@@ -1,8 +1,11 @@
 package com.minephone.network;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -21,7 +24,9 @@ import com.android.volley.toolbox.HttpHeaderParser;
  */
 public class JsonRequest extends Request<String> {
 	private static final String DEFAULT_ENCODING = "utf-8";// 默认编码
-
+//	private static final String DEFAULT_CONTENT_TYPE = String.format("application/json; charset=%s", DEFAULT_ENCODING);//默认请求类型
+	private static final String DEFAULT_CONTENT_TYPE = String.format("application/x-www-form-urlencoded; charset=%s", DEFAULT_ENCODING);//默认请求类型
+	
 	private Listener<String> mlistener;// 成功时的回调
 	
 	private String murl;//请求的URL(用户保留，不做请求)
@@ -64,7 +69,6 @@ public class JsonRequest extends Request<String> {
 		this.headers = headers;
 	}
 	
-	
 	public String getCookies() {
 		return cookies;
 	}
@@ -106,24 +110,10 @@ public class JsonRequest extends Request<String> {
 	public Map<String, String> getHeaders() throws AuthFailureError {
 		if (headers == null) {
 			headers = new HashMap<String, String>();
-			//app验证
-//			headers.put("App_Key", "LBS1256");
-//			headers.put("App_Secret", "a0cc07054f97e8e5f33102dbe42c1ecd");
-			headers.put("Content-Type","application/x-www-form-urlencoded; charset="+ DEFAULT_ENCODING);
-			headers.put("accept-language", "zh-Hans-CN,zh-Hans;q=0.5");
-			headers.put("accept-encoding", "gzip, deflate");
-			
-//			if-modified-since = Mon, 22 Sep 2014 02:20:30 GMT
-//			accept-language = zh-Hans-CN,zh-Hans;q=0.5
-//			accept-encoding = gzip, deflate
-//			cookie = addtime6=1233; addtime82=1233; addtime43=1233; addtime90=1233
-//			content-type = application/x-www-form-urlencoded; charset=utf-8
-//			user-agent = Dalvik/1.6.0 (Linux; U; Android 4.1.2; LG-F160K Build/JZO54K)
-//			host = 192.168.191.1:8080
-//			connection = Keep-Alive
 		}
-		
-		//（cookie提交方式）cookie = LoginCookie=f5e2ff194d3f6bfad0ffeca33c90b81b; JSESSIONID=E2157841B595D0AE93D1C6F0DE6DD1F8
+		headers.put("Content-Type",DEFAULT_CONTENT_TYPE);
+		headers.put("accept-language", "zh-Hans-CN,zh-Hans;q=0.5");
+		headers.put("accept-encoding", "gzip, deflate");
 		if (!(cookies == null || cookies.length() == 0)) {
 			headers.put("Cookie", cookies);
 		}
@@ -163,18 +153,25 @@ public class JsonRequest extends Request<String> {
 			return null;
 		}
 		
-		
 		re_header =  response.headers;
-		String parsed = decode(response.data);
-		
 		//获取返回的cookie(服务器要求写入的cookie)
 		if (re_header!=null) {
 			re_cookies = re_header.get("Set-Cookie");
 		}
-
+		
+		String parsed = decode(response.headers,response.data);
+		
 		return Response.success(parsed,HttpHeaderParser.parseCacheHeaders(response));
 	}
-
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * data原始数据转换编码
 	 * 
@@ -182,39 +179,76 @@ public class JsonRequest extends Request<String> {
 	 * @param data
 	 * @return
 	 */
-	public static String decode(byte[] data) {
+	public static String decode(Map<String, String> header,byte[] data) {
+		//gzip解码数据
+		if (header != null) {
+			if (header.containsKey("Content-Encoding")) {//Content-Type
+				String valu = header.get("Content-Encoding");
+				if ("gzip".equalsIgnoreCase(valu)) {
+					data = decompress(data);
+				}
+			}
+		}
+		
 		String parsed;
 		try {
-			parsed = new String(data, DEFAULT_ENCODING);
-		} catch (UnsupportedEncodingException e) {
+			parsed = new String(data, parseCharset(header));
+		} catch (Exception e) {
 			parsed = new String(data);
 		}
 		return parsed;
 	}
+	
+	
+    private static final  int BUFFER = 1024;
+	/** 
+     * gzip数据解压缩 
+     *  
+     * @param data 
+     * @return 
+     * @throws Exception 
+     */  
+    public static byte[] decompress(byte[] data) {  
+    	try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);  
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+            // 解压缩
+            GZIPInputStream gis = new GZIPInputStream(bais);  
+            int count;  
+            byte temp[] = new byte[BUFFER];  
+            while ((count = gis.read(temp, 0, BUFFER)) != -1) {
+                baos.write(temp, 0, count);
+            }  
+            gis.close();  
+            
+            data = baos.toByteArray();  
+            baos.flush();  
+            baos.close();  
+            bais.close();  
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return data;  
+    }
+    
+    /**
+     * 从HttpHeaderParser抽出
+     * @author ping
+     * @create 2014-11-13 上午10:06:21
+     * @param headers
+     * @return
+     */
+	public static String parseCharset(Map<String, String> headers) {
+		String contentType = (String) headers.get("Content-Type");
+		if (contentType != null) {
+			String params[] = contentType.split(";");
+			for (int i = 1; i < params.length; i++) {
+				String pair[] = params[i].trim().split("=");
+				if (pair.length == 2 && pair[0].equals("charset"))
+					return pair[1];
+			}
 
-	// /**
-	// * 获取BodyContentType
-	// */
-	// @Override
-	// public String getBodyContentType() {
-	// return "application/x-www-form-urlencoded; charset=" +
-	// getParamsEncoding();
-	// }
-
-	// /**
-	// * 获取参数编码
-	// */
-	// @Override
-	// protected String getParamsEncoding() {
-	// return super.getParamsEncoding();
-	// }
-
-	// /**
-	// * 获取请求内容，使用该方法会屏蔽getParams()
-	// */
-	// @Override
-	// public byte[] getPostBody() throws AuthFailureError {
-	// return super.getPostBody();
-	// }
-
+		}
+		return DEFAULT_ENCODING;
+	}
 }

@@ -50,14 +50,14 @@ public class JsonAdapter extends BaseAdapter implements NetAccessListener  {
 	private String datakey;
 	private NetAccessListener callback;
 	private int layoutid;
-	private Map<String, Object> params;
+	private Map<String, String> params;
 	private String url;
 	
 	public JSONArray getJsonArray (){
 		return data;
 	}
 	
-	public JsonAdapter(Context context,int layoutid,String url,String datakey,Map<String, Object> params,Map<String,Integer> field,NetAccessListener callback) {
+	public JsonAdapter(Context context,int layoutid,String url,String datakey,Map<String, String> params,Map<String,Integer> field,NetAccessListener callback) {
 		mcontext = context;
 		this.layoutid = layoutid;
 		this.datakey  =datakey;
@@ -72,7 +72,7 @@ public class JsonAdapter extends BaseAdapter implements NetAccessListener  {
 	 * 2014-4-15 下午3:31:09
 	 * @param params
 	 */
-	public void setparams (Map<String, Object> params) {
+	public void setparams (Map<String, String> params) {
 		this.params = params;
 	}
 	
@@ -84,9 +84,9 @@ public class JsonAdapter extends BaseAdapter implements NetAccessListener  {
 	 */
 	public void refresh (boolean removeoldata) {
 		if (removeoldata) {			
-			NetAccess.request(mcontext).setFlag("JsonAdapter_get").byGet(url + getParamStr(params), this);
+			NetAccess.request(mcontext).setFlag("JsonAdapter_get").byGet(url + NetAccess.getParamStr(params), this);
 		} else {
-			NetAccess.request(mcontext).setFlag("JsonAdapter_add").byGet(url + getParamStr(params), this);
+			NetAccess.request(mcontext).setFlag("JsonAdapter_add").byGet(url + NetAccess.getParamStr(params), this);
 		}
 	}
 
@@ -130,7 +130,7 @@ public class JsonAdapter extends BaseAdapter implements NetAccessListener  {
 			if (childview instanceof TextView) {
 				((TextView) childview).setText(jsonvalue);
 			} else if (childview instanceof ImageView) {
-				NetAccess.request(mcontext).image((ImageView)childview, jsonvalue);
+				NetAccess.image((ImageView)childview, jsonvalue);
 			} else {
 				//key的id不属于TextView，也不属于ImageView
 			}
@@ -170,23 +170,5 @@ public class JsonAdapter extends BaseAdapter implements NetAccessListener  {
 	
 	private static class ViewHolder  {
 		View[] childviews;
-	}
-	
-	/**
-	 * 获取参数(得到 ?a=12&b=123)
-	 * 
-	 * @author ping 2014-4-10 上午9:27:01
-	 * @param params
-	 * @return
-	 */
-	private String getParamStr(Map<String, Object> params) {
-		StringBuffer bf = new StringBuffer("?");
-		if (params != null) {
-			for (String key : params.keySet()) {
-				bf.append(key + "=" + params.get(key) + "&");
-			}
-		}
-		String str = bf.toString();
-		return str.substring(0, str.length() - 1);
 	}
 }

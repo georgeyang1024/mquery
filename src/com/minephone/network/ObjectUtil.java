@@ -2,10 +2,13 @@ package com.minephone.network;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import android.content.Context;
 import android.util.Base64;
 
 public class ObjectUtil {
@@ -81,5 +84,54 @@ public class ObjectUtil {
 	            ex.printStackTrace();   
 		 }
 		return obj;
+	}
+	
+	
+	/**
+	 * Object序列化类
+	 * 
+	 * @param data 需实现Serializable接口
+	 * @param filename
+	 * @return
+	 */
+	public static boolean saveObject(Context context, Object data,
+			String filename) {
+		FileOutputStream out;
+		ObjectOutputStream oout;
+		try {
+			out = context.openFileOutput(filename + ".odb",
+					Context.MODE_PRIVATE);
+			oout = new ObjectOutputStream(out);
+			oout.writeObject(data);
+			oout.flush();
+			out.flush();
+			oout.close();
+			out.close();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * Object反序列化
+	 * 
+	 * @return
+	 */
+	public static Object readObject(Context context, String filename) {
+		FileInputStream in = null;
+		ObjectInputStream oin = null;
+		Object data = null;
+		try {
+			in = context.openFileInput(filename + ".odb");
+			oin = new ObjectInputStream(in);
+			data = oin.readObject();
+			oin.close();
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return data;
 	}
 }

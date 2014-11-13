@@ -30,6 +30,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpClientStack;
+import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
@@ -51,7 +52,7 @@ public class NetAccess {
 	private static final int ERRORIMAGE = R.drawable.bg_error_image;
 
 	private static final int IMAGEMAXMEASURE = 750;// 图片最大尺寸,0则不限制
-
+	
 	private static final String CachePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/mquery";// volley缓存目录
 
 	private static RequestQueue mRequestQueue;// 主要的请求类
@@ -124,11 +125,33 @@ public class NetAccess {
 	}
 	
 	/**
+	 * 取消一个请求
+	 * @author ping
+	 * @create 2014-11-12 下午10:15:10
+	 */
+	public void cancel () {
+		if (request != null) {
+			request.cancel();
+		}
+	}
+	
+	/**
+	 * 取消tag标记的请求
+	 * @author ping
+	 * @create 2014-11-12 下午10:15:31
+	 * @param flag
+	 */
+	public static void cancel(String flag) {
+		if (mRequestQueue != null) {
+			mRequestQueue.cancelAll(flag);
+		}
+	}
+	
+	/**
 	 * 回调接口
 	 * 
 	 * @author ping 2014-4-9 下午10:32:42
 	 */
-
 	public interface NetAccessListener {
 		public void onAccessComplete(boolean success, String object,
 				VolleyError error, String flag);
@@ -233,7 +256,7 @@ public class NetAccess {
 			Entry cachedata = mRequestQueue.getCache().get(url);
 			if (cachedata != null) {
 				if (cachedata.data != null) {
-					result = JsonRequest.decode(cachedata.data);
+					result = JsonRequest.decode(cachedata.responseHeaders, cachedata.data);
 				}
 			}
 		} catch (Exception e) {
@@ -269,15 +292,12 @@ public class NetAccess {
 							opts.inJustDecodeBounds = false;
 							obj = BitmapFactory.decodeByteArray(cachedata.data,0, cachedata.data.length, opts);
 						} else {
-							obj = BitmapFactory.decodeByteArray(cachedata.data,
-									0, cachedata.data.length);
+							obj = BitmapFactory.decodeByteArray(cachedata.data,0, cachedata.data.length);
 						}
 					} else {
-						obj = JsonRequest.decode(cachedata.data);
+						obj = JsonRequest.decode(cachedata.responseHeaders, cachedata.data);
 					}
-
 					result = (T) obj;
-
 				}
 			}
 		} catch (Exception e) {
@@ -368,7 +388,12 @@ public class NetAccess {
 	public NetAccess showDialog(boolean canCancel) {
 		return showDialog("加载中", canCancel);
 	}
-
+	
+	public NetAccess showDialog(int tip, boolean canCancel) {
+		showDialog(mcontext.getString(tip),canCancel);
+		return this;
+	}
+	
 	public NetAccess showDialog(String tip, boolean canCancel) {
 		if (mdialog!=null) {
 			if (mdialog.isShowing()) {
@@ -383,17 +408,6 @@ public class NetAccess {
 			}
 		}
 		return this;
-//		if (!(mdialog == null || !mdialog.isShowing())) {
-//			mdialog.dismiss();
-//		}
-//		if (tip == null) {
-//			mdialog = ProgressDialog.show(mcontext, null, "加载中", true,
-//					canCancel, null);
-//		} else {
-//			mdialog = ProgressDialog.show(mcontext, null, tip, true, canCancel,
-//					null);
-//		}
-//		return this;
 	}
 	
 	/**
@@ -498,8 +512,7 @@ public class NetAccess {
 			public void onAccessComplete(boolean success, String object,
 					VolleyError error, String flag) {
 				if (!success) {
-					USRequestUtil
-							.add(mcontext, Method.GET, murl, heads, params);
+					USRequestUtil.add(mcontext, Method.GET, murl, heads, params);
 				}
 				if (listener != null) {
 					listener.onAccessComplete(success, object, error, flag);
@@ -580,6 +593,7 @@ public class NetAccess {
 		if (cookies==null) {
 			cookies = CookieUtil.getCookie(mcontext, GetDomainName(url));
 		}
+		request.setUrl(url);
 		request.setCookies(cookies);
 		request.setTimeout(timeout);
 		request.setShouldCache(savecache);
@@ -619,7 +633,6 @@ public class NetAccess {
 			if (recookie!=null) {
 				CookieUtil.setcookie(net.mcontext, GetDomainName(net.request.getUrl()), net.request.getRe_cookies());
 			}
-
 		}
 
 		@Override
@@ -670,24 +683,27 @@ public class NetAccess {
 		if (imageview == null) {
 			return;
 		}
+		
+		if (url == null) {
+			imageview.setImageResource(errorimg);
+			return;
+		}
 
 		checkVar(null);
 
 		imageview.setTag(url);
 
-		Bitmap bm = mLruCache
-				.getBitmap(getCacheKey(url, maxmeasure, maxmeasure));
+		final String urlkey = getCacheKey(url, maxmeasure, maxmeasure);
+		Bitmap bm = mLruCache.getBitmap(urlkey);
 		if (bm == null) {
 			bm = getCache(url, Bitmap.class);
 			if (bm != null) {
-				mLruCache.putBitmap(getCacheKey(url, maxmeasure, maxmeasure),
-						bm);
+				mLruCache.putBitmap(urlkey,bm);
 			}
 		}
 
 		if (bm == null) {
-			mImageLoader.get(url, ImageLoader.getImageListener(imageview,
-					loadingimg, errorimg), maxmeasure, maxmeasure);
+			mImageLoader.get(url, ImageLoader.getImageListener(imageview,loadingimg, errorimg), maxmeasure, maxmeasure);
 		} else {
 			final int bmsize = bm.getRowBytes() * bm.getHeight();
 			imageview.setImageBitmap(bm);
@@ -697,12 +713,9 @@ public class NetAccess {
 						public void onResponse(Bitmap bitmap) {
 							if (imageview.getTag().toString().equals(url)) {
 								imageview.setImageBitmap(bitmap);
-								if (bmsize != bitmap.getRowBytes()
-										* bitmap.getHeight()) {
+								if (bmsize != bitmap.getRowBytes() * bitmap.getHeight()) {
 									// 图片改变了，更新图片缓存
-									mLruCache.putBitmap(
-											getCacheKey(url, maxmeasure,
-													maxmeasure), bitmap);
+									mLruCache.putBitmap(urlkey, bitmap);
 								}
 							} else if (!bitmap.isRecycled()) {
 								bitmap.recycle();
@@ -729,7 +742,7 @@ public class NetAccess {
 	 * @param params
 	 * @return
 	 */
-	private static String getParamStr(Map<String, String> params) {
+	public static String getParamStr(Map<String, String> params) {
 		StringBuffer bf = new StringBuffer("?");
 		if (params != null) {
 			Set<String> mset = params.keySet();
@@ -748,13 +761,13 @@ public class NetAccess {
 		return str.substring(0, str.length() - 1);
 	}
 
-	private static String getCacheKey(String url, int maxWidth, int maxHeight) {
+	public static String getCacheKey(String url, int maxWidth, int maxHeight) {
 		return (new StringBuilder(url.length() + 12)).append("#W")
 				.append(maxWidth).append("#H").append(maxHeight).append(url)
 				.toString();
 	}
 
-	private static int calculateSampleSize(BitmapFactory.Options options,
+	public static int calculateSampleSize(BitmapFactory.Options options,
 			int reqWidth, int reqHeight) {
 		final int height = options.outHeight;
 		final int width = options.outWidth;
@@ -772,7 +785,7 @@ public class NetAccess {
 	}
 	
 	//取得url域名
-	private static String GetDomainName(String url) {
+	public static String GetDomainName(String url) {
 		Pattern p = Pattern.compile("^http://[^/]+");
         Matcher matcher = p.matcher(url);
         if(matcher.find()){

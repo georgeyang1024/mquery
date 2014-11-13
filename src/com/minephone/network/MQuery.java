@@ -75,6 +75,7 @@ public class MQuery {
 	}
 	
 	public MQuery id (View view) {
+		
 		if (useCache) {
 			//10W次调用测试用时:2882ms 3142秒 3024秒
 			if (mqCache == null) {
@@ -90,9 +91,10 @@ public class MQuery {
 			//10W次调用测试用时:6467ms 6091ms 6001ms7
 			return new MQuery(view);			
 		}
+		
 	}
 	
-	public NetAccess request() {
+	public NetAccess request()  {
 		return NetAccess.request(view.getContext());
 	}
 	
