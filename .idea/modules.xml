@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../MQuery/MQuery.iml" filepath="$PROJECT_DIR$/../MQuery/MQuery.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mquerySimple.iml" filepath="$PROJECT_DIR$/mquerySimple.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MQuery.iml" filepath="$PROJECT_DIR$/MQuery.iml" />
     </modules>
   </component>
 </project>
