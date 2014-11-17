@@ -17,9 +17,14 @@
 
         <ImageView
             android:id="@+id/imageView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:src="@drawable/ic_launcher" />
+        <com.example.view.CodeView 
+			android:id="@+id/codeview"
+            android:layout_width="70dp"
+            android:layout_height="30dp"
+            />
 
         <CheckBox
             android:id="@+id/checkBox1"

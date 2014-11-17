@@ -4,11 +4,15 @@ import java.util.List;
 
 import com.minephone.network.MQuery;
 
+import entity.MPic;
+
 import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * 
@@ -16,7 +20,7 @@ import android.widget.TextView;
  * @create 2014-10-10 下午7:56:07
  */
 public class Madapter extends ABaseAdapter {
-	List<String> list;
+	List<MPic> list;
 	Activity mactivity;
 	
 	
@@ -26,7 +30,7 @@ public class Madapter extends ABaseAdapter {
 	
 	@Override
 	public int getCount() {
-		return 500;
+		return list==null?0:list.size();
 	}
 
 	@Override
@@ -36,11 +40,16 @@ public class Madapter extends ABaseAdapter {
 
 	@Override
 	public long getItemId(int arg0) {
-		return 0;
+		return arg0;
 	}
 
+	public void setData(List<MPic> newlist) {
+		list = newlist;
+		notifyDataSetChanged();
+	}
+	
 	@Override
-	public View getAnimatorView(int i, View convertView, ViewGroup viewgroup) {
+	public View getAnimatorView(final int i, View convertView, ViewGroup viewgroup) {
 		ViewHolder holder;
 		if (convertView==null) {
 			convertView = LayoutInflater.from(mactivity).inflate(R.layout.item_list, null);
@@ -50,8 +59,17 @@ public class Madapter extends ABaseAdapter {
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		MQuery mq = new MQuery(convertView);
-		mq.id(holder.tv).text("haha:" + i);
+		MQuery mq = new MQuery(convertView,true);
+		
+		MPic poic = list.get(i);
+		mq.id(R.id.imageView1).image(list.get(i).getThumbnail_url());
+		mq.id(holder.tv).text("标题:" +poic.getAbs());
+		mq.id(R.id.button1).clicked(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Toast.makeText(mactivity,"内容:" + list.get(i).getDesc(),Toast.LENGTH_LONG).show();
+			}
+		});
 		
 		return convertView;
 	}
