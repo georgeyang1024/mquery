@@ -30,7 +30,7 @@ public class JsonRequest extends Request<String> {
 	
 	private String murl;//请求的URL(用户保留，不做请求)
 	
-	private Map<String, String> headers;// 提交头
+	private Map<String, String> headers;// 提交头 
 	private Map<String, String> params;// 提交的参数
 	private String cookies;// 提交的cookies
 	
