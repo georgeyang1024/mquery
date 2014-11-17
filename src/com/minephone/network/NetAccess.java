@@ -30,7 +30,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpClientStack;
-import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
@@ -70,6 +69,8 @@ public class NetAccess {
 	private Map<String, String> params;// 提交的参数
 
 	private String flag;// 请求标示
+	
+	private String cachekey;//缓存的key
 
 	private String cookies;// 提交的cookies
 
@@ -96,6 +97,19 @@ public class NetAccess {
 		return request;
 	}
 
+	/**
+	 * 自定义缓存key
+	 * @author ping
+	 * @create 2014-11-13 上午10:43:37
+	 * @param key
+	 * @return
+	 */
+	public NetAccess setCachekey(String key) {
+		cachekey = key;
+		return this;
+	}
+
+	
 	/**
 	 * 获取返回的数据的请求头 NetAccess.getReHeaders();
 	 * 
@@ -172,7 +186,7 @@ public class NetAccess {
 
 				mRequestQueue.getCache().clear();
 			} else {
-				mLruCache.remove(getCache(url));
+				mLruCache.remove(url);
 				mRequestQueue.getCache().remove(url);
 			}
 		} catch (Exception e) {
@@ -249,11 +263,11 @@ public class NetAccess {
 	 * @param url
 	 * @return
 	 */
-	public static String getCache(String url) {
+	public static String getCache(String urlorkey) {
 		String result = null;
 		try {
 			// 获取缓存
-			Entry cachedata = mRequestQueue.getCache().get(url);
+			Entry cachedata = mRequestQueue.getCache().get(urlorkey);
 			if (cachedata != null) {
 				if (cachedata.data != null) {
 					result = JsonRequest.decode(cachedata.responseHeaders, cachedata.data);
@@ -445,7 +459,7 @@ public class NetAccess {
 	 */
 	synchronized public void byCacheGet(String url, NetAccessListener listener) {
 		url += getParamStr(params);
-		String cache = getCache(url);
+		String cache = getCache(cachekey == null ? url : cachekey);
 		if (cache != null) {
 			MQLog.i(TAG, "gcache-->" + cache);
 			if (!(mdialog == null || !mdialog.isShowing())) {
@@ -480,7 +494,7 @@ public class NetAccess {
 	 * @param listener
 	 */
 	synchronized public void byCachePost(String url, NetAccessListener listener) {
-		String cache = getCache(url);
+		String cache = getCache(cachekey == null ? url : cachekey);
 		if (cache != null) {
 			MQLog.i(TAG, "pcache-->" + cache);
 			if (!(mdialog == null || !mdialog.isShowing())) {
@@ -597,6 +611,7 @@ public class NetAccess {
 		request.setCookies(cookies);
 		request.setTimeout(timeout);
 		request.setShouldCache(savecache);
+		request.setCachekey(cachekey);
 		request.setTag(TextUtils.isEmpty(flag) ? TAG : flag);
 		mRequestQueue.add(request);
 		mRequestQueue.start();
@@ -696,10 +711,12 @@ public class NetAccess {
 		final String urlkey = getCacheKey(url, maxmeasure, maxmeasure);
 		Bitmap bm = mLruCache.getBitmap(urlkey);
 		if (bm == null) {
-			bm = getCache(url, Bitmap.class);
-			if (bm != null) {
-				mLruCache.putBitmap(urlkey,bm);
-			}
+			imageview.setImageResource(loadingimg);
+			//以下4行导致卡顿，所有去掉
+//			bm = getCache(url, Bitmap.class);
+//			if (bm != null) {
+//				mLruCache.putBitmap(urlkey,bm);
+//			}
 		}
 
 		if (bm == null) {

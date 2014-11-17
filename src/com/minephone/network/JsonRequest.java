@@ -2,7 +2,6 @@ package com.minephone.network;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -38,7 +37,15 @@ public class JsonRequest extends Request<String> {
 	private String re_cookies;// 返回来后重置成改cookies
 	private Map<String, String> re_header;//返回的数据头
 	
-
+	private String cachekey;
+	
+	public void setCachekey(String key) {
+		cachekey = key;
+	}
+	@Override
+	public String getCacheKey() {
+		return cachekey ==null ? super.getCacheKey() :cachekey;
+	}
 	
 	public String getUrl() {
 		return murl;
