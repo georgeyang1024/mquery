@@ -861,6 +861,7 @@ public class NetAccess {
 	
 	//取得url域名
 	public static String GetDomainName(String url) {
+		if (url==null) return "";
 		Pattern p = Pattern.compile("^http://[^/]+");
         Matcher matcher = p.matcher(url);
         if(matcher.find()){
